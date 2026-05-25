@@ -1,0 +1,372 @@
+import { useState } from "react";
+
+const G = `@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap');`;
+
+const C = {
+  bg:"#F5F7FA", surface:"#FFFFFF", card:"#FFFFFF",
+  navy:"#0F1B35", blue:"#1D4ED8", green:"#059669",
+  red:"#DC2626", amber:"#D97706", purple:"#7C3AED",
+  text:"#0F1B35", muted:"#6B7280", border:"#E5E7EB",
+  lightbg:"#F9FAFB",
+};
+
+const css = `
+${G}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:${C.bg};color:${C.text};font-family:'Space Grotesk',sans-serif}
+
+.app{min-height:100vh;display:flex}
+
+/* SIDEBAR */
+.sidebar{width:220px;background:${C.navy};display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:50}
+.sb-logo{padding:1.5rem 1.25rem;border-bottom:1px solid rgba(255,255,255,0.08)}
+.sb-logo-text{font-family:'Space Mono',monospace;font-size:1rem;font-weight:700;color:#fff;letter-spacing:1px}
+.sb-logo-sub{font-size:0.65rem;color:rgba(255,255,255,0.4);letter-spacing:2px;text-transform:uppercase;margin-top:0.15rem}
+.sb-nav{flex:1;padding:1rem 0.75rem}
+.sb-section{font-size:0.6rem;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,0.3);padding:0.75rem 0.5rem 0.4rem}
+.sb-item{display:flex;align-items:center;gap:0.65rem;padding:0.6rem 0.75rem;border-radius:8px;cursor:pointer;transition:all 0.18s;margin-bottom:0.15rem;font-size:0.85rem;font-weight:500;color:rgba(255,255,255,0.55);border:none;background:none;width:100%;text-align:left;font-family:'Space Grotesk',sans-serif}
+.sb-item:hover{color:#fff;background:rgba(255,255,255,0.07)}
+.sb-item.on{color:#fff;background:${C.blue}}
+.sb-item span{font-size:1rem}
+.sb-footer{padding:1rem 1.25rem;border-top:1px solid rgba(255,255,255,0.08)}
+.sb-user{font-size:0.78rem;color:rgba(255,255,255,0.5)}
+.sb-user strong{display:block;color:#fff;font-size:0.85rem}
+
+/* MAIN */
+.content{margin-left:220px;flex:1;min-height:100vh}
+.topbar{background:${C.surface};border-bottom:1px solid ${C.border};padding:0 2rem;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:40}
+.page-title{font-size:1.05rem;font-weight:700;color:${C.text}}
+.topbar-actions{display:flex;gap:0.75rem;align-items:center}
+.tb-btn{background:${C.blue};color:#fff;border:none;padding:0.45rem 1rem;border-radius:7px;font-family:'Space Grotesk',sans-serif;font-size:0.8rem;font-weight:600;cursor:pointer;transition:all 0.18s}
+.tb-btn:hover{background:#1a43b8}
+.main-body{padding:2rem}
+
+/* KPI CARDS */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem}
+.kpi{background:${C.card};border:1px solid ${C.border};border-radius:12px;padding:1.25rem;position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.kpi.blue::before{background:${C.blue}}
+.kpi.green::before{background:${C.green}}
+.kpi.amber::before{background:${C.amber}}
+.kpi.purple::before{background:${C.purple}}
+.kpi-label{font-size:0.72rem;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:${C.muted};margin-bottom:0.5rem}
+.kpi-value{font-family:'Space Mono',monospace;font-size:1.7rem;font-weight:700;color:${C.text};margin-bottom:0.25rem}
+.kpi-change{font-size:0.75rem;font-weight:500}
+.kpi-change.up{color:${C.green}}
+.kpi-change.down{color:${C.red}}
+.kpi-icon{position:absolute;top:1.1rem;right:1.1rem;font-size:1.4rem;opacity:0.5}
+
+/* SECTION HEADER */
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.sec-title{font-size:0.95rem;font-weight:700;color:${C.text}}
+.sec-actions{display:flex;gap:0.5rem}
+.sm-btn{background:${C.lightbg};border:1px solid ${C.border};color:${C.muted};padding:0.35rem 0.85rem;border-radius:6px;font-size:0.75rem;font-weight:600;cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:all 0.18s}
+.sm-btn:hover{border-color:${C.blue};color:${C.blue}}
+.sm-btn.pri{background:${C.blue};color:#fff;border-color:${C.blue}}
+.sm-btn.pri:hover{background:#1a43b8}
+
+/* TABLE */
+.table-wrap{background:${C.card};border:1px solid ${C.border};border-radius:12px;overflow:hidden;margin-bottom:2rem}
+.table-search{padding:1rem 1.25rem;border-bottom:1px solid ${C.border};display:flex;gap:0.75rem;align-items:center}
+.table-search input{flex:1;border:1px solid ${C.border};background:${C.lightbg};color:${C.text};border-radius:7px;padding:0.5rem 0.85rem;font-family:'Space Grotesk',sans-serif;font-size:0.85rem;outline:none;transition:border-color 0.18s}
+.table-search input:focus{border-color:${C.blue}}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:0.68rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:${C.muted};padding:0.75rem 1.25rem;border-bottom:1px solid ${C.border};background:${C.lightbg}}
+td{padding:0.85rem 1.25rem;border-bottom:1px solid ${C.border};font-size:0.85rem;color:${C.text}}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:${C.lightbg}}
+.badge{display:inline-block;font-size:0.68rem;font-weight:700;letter-spacing:0.5px;padding:0.2rem 0.6rem;border-radius:999px}
+.b-in{background:#D1FAE5;color:${C.green}}
+.b-low{background:#FEF3C7;color:${C.amber}}
+.b-out{background:#FEE2E2;color:${C.red}}
+.b-sale{background:#EDE9FE;color:${C.purple}}
+.mono{font-family:'Space Mono',monospace;font-size:0.82rem}
+.act-btn{background:none;border:none;color:${C.muted};cursor:pointer;font-size:0.78rem;font-weight:600;padding:0.25rem 0.5rem;border-radius:4px;font-family:'Space Grotesk',sans-serif;transition:all 0.15s}
+.act-btn:hover{color:${C.red};background:#FEE2E2}
+
+/* SALES TABLE */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:2rem}
+@media(max-width:900px){.two-col{grid-template-columns:1fr}.kpi-grid{grid-template-columns:repeat(2,1fr)}}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(15,27,53,0.6);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:center;justify-content:center;padding:1rem}
+.modal{background:${C.card};border:1px solid ${C.border};border-radius:14px;width:100%;max-width:480px;padding:1.75rem;box-shadow:0 24px 60px rgba(0,0,0,0.2)}
+.modal h2{font-size:1.1rem;font-weight:700;margin-bottom:1.25rem;color:${C.text}}
+.fg{margin-bottom:0.85rem}
+.fg label{display:block;font-size:0.7rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:${C.muted};margin-bottom:0.35rem}
+.fg input,.fg select{width:100%;border:1px solid ${C.border};background:${C.lightbg};color:${C.text};border-radius:7px;padding:0.6rem 0.85rem;font-family:'Space Grotesk',sans-serif;font-size:0.88rem;outline:none;transition:border-color 0.18s}
+.fg input:focus,.fg select:focus{border-color:${C.blue};background:#fff}
+.fg select option{background:#fff}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem}
+.m-acts{display:flex;gap:0.75rem;margin-top:1.25rem}
+.m-cancel{flex:1;background:${C.lightbg};border:1px solid ${C.border};color:${C.muted};padding:0.65rem;border-radius:8px;font-family:'Space Grotesk',sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer;transition:all 0.18s}
+.m-cancel:hover{border-color:${C.blue};color:${C.blue}}
+.m-save{flex:2;background:${C.blue};color:#fff;border:none;padding:0.65rem;border-radius:8px;font-family:'Space Grotesk',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;transition:all 0.18s}
+.m-save:hover{background:#1a43b8}
+
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:${C.navy};color:#fff;padding:0.75rem 1.25rem;border-radius:8px;font-size:0.82rem;font-weight:600;z-index:999;box-shadow:0 8px 24px rgba(0,0,0,0.2);animation:su 0.25s ease}
+@keyframes su{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+`;
+
+const INIT_INV = [
+  { id:1, name:"Handwoven Malong", sku:"MLG-001", category:"Textiles", stock:24, price:850, cost:500, status:"In Stock" },
+  { id:2, name:"Kulintang Bracelet", sku:"KLT-002", category:"Jewelry", stock:8, price:320, cost:150, status:"Low Stock" },
+  { id:3, name:"Batik Tote Bag", sku:"BTK-003", category:"Accessories", stock:0, price:450, cost:200, status:"Out of Stock" },
+  { id:4, name:"Tribal Wall Art", sku:"TWA-004", category:"Decor", stock:15, price:1200, cost:600, status:"In Stock" },
+  { id:5, name:"Okir Bookmark Set", sku:"OKR-005", category:"Stationery", stock:3, price:120, cost:50, status:"Low Stock" },
+];
+
+const INIT_SALES = [
+  { id:1, item:"Handwoven Malong", qty:2, total:1700, date:"May 20, 2026", method:"GCash" },
+  { id:2, item:"Tribal Wall Art", qty:1, total:1200, date:"May 21, 2026", method:"Cash" },
+  { id:3, item:"Batik Tote Bag", qty:3, total:1350, date:"May 22, 2026", method:"Maya" },
+  { id:4, item:"Okir Bookmark Set", qty:5, total:600, date:"May 23, 2026", method:"Cash" },
+  { id:5, item:"Kulintang Bracelet", qty:2, total:640, date:"May 24, 2026", method:"GCash" },
+];
+
+const EMPTY_ITEM = { name:"", sku:"", category:"Textiles", stock:"", price:"", cost:"", status:"In Stock" };
+const EMPTY_SALE = { item:"", qty:"", total:"", method:"Cash" };
+
+export default function App() {
+  const [page, setPage] = useState("dashboard");
+  const [inventory, setInventory] = useState(INIT_INV);
+  const [sales, setSales] = useState(INIT_SALES);
+  const [invSearch, setInvSearch] = useState("");
+  const [modal, setModal] = useState(null);
+  const [form, setForm] = useState({});
+  const [toast, setToast] = useState(null);
+
+  const fire = (msg) => { setToast(msg); setTimeout(() => setToast(null), 3000); };
+
+  const totalRevenue = sales.reduce((a, s) => a + s.total, 0);
+  const totalItems = inventory.reduce((a, i) => a + i.stock, 0);
+  const lowStock = inventory.filter(i => i.status !== "In Stock").length;
+  const totalProfit = sales.reduce((a, s) => {
+    const item = inventory.find(i => i.name === s.item);
+    return a + (item ? (item.price - item.cost) * s.qty : s.total * 0.3);
+  }, 0);
+
+  const filteredInv = inventory.filter(i =>
+    i.name.toLowerCase().includes(invSearch.toLowerCase()) || i.sku.toLowerCase().includes(invSearch.toLowerCase())
+  );
+
+  const openAdd = (type) => { setForm(type === "item" ? EMPTY_ITEM : EMPTY_SALE); setModal(type); };
+
+  const saveItem = () => {
+    if (!form.name || !form.sku) return;
+    setInventory(prev => [...prev, { id: Date.now(), ...form, stock: Number(form.stock), price: Number(form.price), cost: Number(form.cost) }]);
+    setModal(null); fire("Item added to inventory ✅");
+  };
+
+  const saveSale = () => {
+    if (!form.item || !form.qty) return;
+    const item = inventory.find(i => i.name === form.item);
+    const total = item ? item.price * Number(form.qty) : Number(form.total);
+    setSales(prev => [{ id: Date.now(), ...form, qty: Number(form.qty), total, date: "May 24, 2026" }, ...prev]);
+    if (item) setInventory(prev => prev.map(i => i.name === form.item ? { ...i, stock: Math.max(0, i.stock - Number(form.qty)), status: i.stock - Number(form.qty) <= 0 ? "Out of Stock" : i.stock - Number(form.qty) <= 5 ? "Low Stock" : "In Stock" } : i));
+    setModal(null); fire("Sale recorded 💰");
+  };
+
+  const deleteItem = (id) => { setInventory(prev => prev.filter(i => i.id !== id)); fire("Item removed"); };
+
+  const PAGES = { dashboard:"📊 Dashboard", inventory:"📦 Inventory", sales:"💸 Sales", reports:"📈 Reports" };
+
+  return (
+    <>
+      <style>{css}</style>
+      <div className="app">
+        {/* SIDEBAR */}
+        <aside className="sidebar">
+          <div className="sb-logo">
+            <div className="sb-logo-text">BizTrack</div>
+            <div className="sb-logo-sub">Small Business Manager</div>
+          </div>
+          <nav className="sb-nav">
+            <div className="sb-section">Main Menu</div>
+            {Object.entries(PAGES).map(([k,v]) => (
+              <button key={k} className={`sb-item${page===k?" on":""}`} onClick={() => setPage(k)}>
+                <span>{v.split(" ")[0]}</span>{v.split(" ").slice(1).join(" ")}
+              </button>
+            ))}
+          </nav>
+          <div className="sb-footer">
+            <div className="sb-user"><strong>My Business</strong>Est. 2024 · Mindanao, PH</div>
+          </div>
+        </aside>
+
+        {/* CONTENT */}
+        <div className="content">
+          <div className="topbar">
+            <div className="page-title">{PAGES[page]}</div>
+            <div className="topbar-actions">
+              {page === "inventory" && <button className="tb-btn" onClick={() => openAdd("item")}>+ Add Item</button>}
+              {page === "sales" && <button className="tb-btn" onClick={() => openAdd("sale")}>+ Record Sale</button>}
+            </div>
+          </div>
+
+          <div className="main-body">
+            {/* DASHBOARD */}
+            {page === "dashboard" && (
+              <>
+                <div className="kpi-grid">
+                  <div className="kpi blue"><div className="kpi-icon">💰</div><div className="kpi-label">Total Revenue</div><div className="kpi-value mono">₱{totalRevenue.toLocaleString()}</div><div className="kpi-change up">↑ This month</div></div>
+                  <div className="kpi green"><div className="kpi-icon">📦</div><div className="kpi-label">Items in Stock</div><div className="kpi-value mono">{totalItems}</div><div className="kpi-change up">↑ Across all products</div></div>
+                  <div className="kpi amber"><div className="kpi-icon">⚠️</div><div className="kpi-label">Needs Restock</div><div className="kpi-value mono">{lowStock}</div><div className="kpi-change down">{lowStock} items low/out</div></div>
+                  <div className="kpi purple"><div className="kpi-icon">📈</div><div className="kpi-label">Est. Profit</div><div className="kpi-value mono">₱{Math.round(totalProfit).toLocaleString()}</div><div className="kpi-change up">↑ From sales</div></div>
+                </div>
+                <div className="two-col">
+                  <div>
+                    <div className="sec-hdr"><div className="sec-title">Recent Sales</div><button className="sm-btn" onClick={()=>setPage("sales")}>View all →</button></div>
+                    <div className="table-wrap">
+                      <table>
+                        <thead><tr><th>Item</th><th>Total</th><th>Date</th></tr></thead>
+                        <tbody>{sales.slice(0,4).map(s=>(
+                          <tr key={s.id}><td>{s.item}</td><td className="mono">₱{s.total.toLocaleString()}</td><td style={{color:C.muted,fontSize:"0.78rem"}}>{s.date}</td></tr>
+                        ))}</tbody>
+                      </table>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="sec-hdr"><div className="sec-title">Low Stock Alerts</div><button className="sm-btn" onClick={()=>setPage("inventory")}>Manage →</button></div>
+                    <div className="table-wrap">
+                      <table>
+                        <thead><tr><th>Item</th><th>Stock</th><th>Status</th></tr></thead>
+                        <tbody>{inventory.filter(i=>i.status!=="In Stock").map(i=>(
+                          <tr key={i.id}><td>{i.name}</td><td className="mono">{i.stock}</td><td><span className={`badge ${i.status==="Out of Stock"?"b-out":"b-low"}`}>{i.status}</span></td></tr>
+                        ))}</tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* INVENTORY */}
+            {page === "inventory" && (
+              <div className="table-wrap">
+                <div className="table-search">
+                  <input placeholder="🔍 Search inventory..." value={invSearch} onChange={e=>setInvSearch(e.target.value)} />
+                  <button className="sm-btn pri" onClick={() => openAdd("item")}>+ Add Item</button>
+                </div>
+                <table>
+                  <thead><tr><th>Product</th><th>SKU</th><th>Category</th><th>Stock</th><th>Price</th><th>Cost</th><th>Status</th><th>Action</th></tr></thead>
+                  <tbody>{filteredInv.map(i=>(
+                    <tr key={i.id}>
+                      <td style={{fontWeight:600}}>{i.name}</td>
+                      <td className="mono" style={{color:C.muted}}>{i.sku}</td>
+                      <td>{i.category}</td>
+                      <td className="mono">{i.stock}</td>
+                      <td className="mono">₱{i.price.toLocaleString()}</td>
+                      <td className="mono">₱{i.cost.toLocaleString()}</td>
+                      <td><span className={`badge ${i.status==="In Stock"?"b-in":i.status==="Low Stock"?"b-low":"b-out"}`}>{i.status}</span></td>
+                      <td><button className="act-btn" onClick={()=>deleteItem(i.id)}>Remove</button></td>
+                    </tr>
+                  ))}</tbody>
+                </table>
+              </div>
+            )}
+
+            {/* SALES */}
+            {page === "sales" && (
+              <div className="table-wrap">
+                <div className="table-search">
+                  <span style={{fontSize:"0.85rem",color:C.muted,fontWeight:600}}>{sales.length} transactions recorded</span>
+                  <button className="sm-btn pri" style={{marginLeft:"auto"}} onClick={() => openAdd("sale")}>+ Record Sale</button>
+                </div>
+                <table>
+                  <thead><tr><th>Item Sold</th><th>Qty</th><th>Total</th><th>Payment</th><th>Date</th></tr></thead>
+                  <tbody>{sales.map(s=>(
+                    <tr key={s.id}>
+                      <td style={{fontWeight:600}}>{s.item}</td>
+                      <td className="mono">{s.qty}</td>
+                      <td className="mono" style={{color:C.green,fontWeight:600}}>₱{s.total.toLocaleString()}</td>
+                      <td><span className="badge b-sale">{s.method}</span></td>
+                      <td style={{color:C.muted,fontSize:"0.78rem"}}>{s.date}</td>
+                    </tr>
+                  ))}</tbody>
+                </table>
+              </div>
+            )}
+
+            {/* REPORTS */}
+            {page === "reports" && (
+              <>
+                <div className="kpi-grid" style={{marginBottom:"2rem"}}>
+                  <div className="kpi blue"><div className="kpi-icon">💰</div><div className="kpi-label">Total Revenue</div><div className="kpi-value mono">₱{totalRevenue.toLocaleString()}</div></div>
+                  <div className="kpi green"><div className="kpi-icon">📈</div><div className="kpi-label">Gross Profit</div><div className="kpi-value mono">₱{Math.round(totalProfit).toLocaleString()}</div></div>
+                  <div className="kpi amber"><div className="kpi-icon">🛒</div><div className="kpi-label">Transactions</div><div className="kpi-value mono">{sales.length}</div></div>
+                  <div className="kpi purple"><div className="kpi-icon">📦</div><div className="kpi-label">Products</div><div className="kpi-value mono">{inventory.length}</div></div>
+                </div>
+                <div className="table-wrap">
+                  <div className="table-search"><span style={{fontWeight:600,fontSize:"0.85rem"}}>Product Performance</span></div>
+                  <table>
+                    <thead><tr><th>Product</th><th>Price</th><th>Cost</th><th>Margin</th><th>Status</th></tr></thead>
+                    <tbody>{inventory.map(i=>{
+                      const margin = Math.round(((i.price-i.cost)/i.price)*100);
+                      return (
+                        <tr key={i.id}>
+                          <td style={{fontWeight:600}}>{i.name}</td>
+                          <td className="mono">₱{i.price.toLocaleString()}</td>
+                          <td className="mono">₱{i.cost.toLocaleString()}</td>
+                          <td><span style={{color:margin>40?C.green:margin>25?C.amber:C.red,fontWeight:700,fontFamily:"'Space Mono',monospace"}}>{margin}%</span></td>
+                          <td><span className={`badge ${i.status==="In Stock"?"b-in":i.status==="Low Stock"?"b-low":"b-out"}`}>{i.status}</span></td>
+                        </tr>
+                      );
+                    })}</tbody>
+                  </table>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* ADD ITEM MODAL */}
+        {modal === "item" && (
+          <div className="overlay" onClick={e=>e.target===e.currentTarget&&setModal(null)}>
+            <div className="modal">
+              <h2>Add Inventory Item</h2>
+              <div className="row2">
+                <div className="fg"><label>Product Name</label><input placeholder="e.g. Handwoven Malong" value={form.name||""} onChange={e=>setForm({...form,name:e.target.value})} /></div>
+                <div className="fg"><label>SKU</label><input placeholder="e.g. MLG-001" value={form.sku||""} onChange={e=>setForm({...form,sku:e.target.value})} /></div>
+              </div>
+              <div className="row2">
+                <div className="fg"><label>Category</label><select value={form.category||"Textiles"} onChange={e=>setForm({...form,category:e.target.value})}>{["Textiles","Jewelry","Accessories","Decor","Stationery","Food","Other"].map(c=><option key={c}>{c}</option>)}</select></div>
+                <div className="fg"><label>Stock Quantity</label><input type="number" placeholder="0" value={form.stock||""} onChange={e=>setForm({...form,stock:e.target.value})} /></div>
+              </div>
+              <div className="row2">
+                <div className="fg"><label>Selling Price (₱)</label><input type="number" placeholder="0.00" value={form.price||""} onChange={e=>setForm({...form,price:e.target.value})} /></div>
+                <div className="fg"><label>Cost Price (₱)</label><input type="number" placeholder="0.00" value={form.cost||""} onChange={e=>setForm({...form,cost:e.target.value})} /></div>
+              </div>
+              <div className="fg"><label>Status</label><select value={form.status||"In Stock"} onChange={e=>setForm({...form,status:e.target.value})}>{["In Stock","Low Stock","Out of Stock"].map(s=><option key={s}>{s}</option>)}</select></div>
+              <div className="m-acts">
+                <button className="m-cancel" onClick={()=>setModal(null)}>Cancel</button>
+                <button className="m-save" onClick={saveItem}>Add to Inventory</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* RECORD SALE MODAL */}
+        {modal === "sale" && (
+          <div className="overlay" onClick={e=>e.target===e.currentTarget&&setModal(null)}>
+            <div className="modal">
+              <h2>Record a Sale</h2>
+              <div className="fg"><label>Product Sold</label><select value={form.item||""} onChange={e=>setForm({...form,item:e.target.value})}><option value="">-- Select product --</option>{inventory.map(i=><option key={i.id}>{i.name}</option>)}</select></div>
+              <div className="row2">
+                <div className="fg"><label>Quantity</label><input type="number" placeholder="1" value={form.qty||""} onChange={e=>setForm({...form,qty:e.target.value})} /></div>
+                <div className="fg"><label>Payment Method</label><select value={form.method||"Cash"} onChange={e=>setForm({...form,method:e.target.value})}>{["Cash","GCash","Maya","Card","Other"].map(m=><option key={m}>{m}</option>)}</select></div>
+              </div>
+              {form.item && form.qty && (() => { const item = inventory.find(i=>i.name===form.item); return item ? <div style={{background:"#EDE9FE",border:"1px solid #C4B5FD",borderRadius:8,padding:"0.75rem 1rem",marginBottom:"0.75rem",fontSize:"0.82rem",color:C.purple,fontWeight:600}}>Total: ₱{(item.price * Number(form.qty)).toLocaleString()}</div> : null; })()}
+              <div className="m-acts">
+                <button className="m-cancel" onClick={()=>setModal(null)}>Cancel</button>
+                <button className="m-save" onClick={saveSale}>Record Sale 💰</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {toast && <div className="toast">{toast}</div>}
+      </div>
+    </>
+  );
+}
