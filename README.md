@@ -22,6 +22,6 @@ digitally — reducing manual tracking and improving
 decision-making.
 
 ## Author
-[Your Full Name]
+Macalangcom, Cosmela O.
 BS Information Systems, Mindanao State University
 Business Owner | Student | Youth Advocate
